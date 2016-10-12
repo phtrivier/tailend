@@ -1,0 +1,49 @@
+body {
+    padding: 20px;
+    .container {
+        padding: 20px;
+    }
+}
+
+.page {
+    margin: auto;
+    width: 80%;
+}
+
+.tailend-view {
+    border: 1px solid black;
+    display: flex;
+    flex-direaction: row;
+    flex-wrap: wrap;
+    /* color: blue; */
+}
+
+.tailend-box {
+    position: relative;
+}
+
+.tailend-item {
+    border: 1px solid green;
+    margin-left: 5px;
+    width: 50px;
+    height: 50px;
+    /*
+        background-size: 50px 50px;
+        background-image: url("/circle.png");
+        */
+}
+
+.tailend-cross {
+    border: 1px solid red;
+    margin-left: 5px;
+    width: 50px;
+    height: 50px;
+    /*
+        background-size: 50px 50px;
+        background-image: url("/cross.png");
+   */
+    /*
+    position: absolute;
+    top: 0px;
+   */
+}

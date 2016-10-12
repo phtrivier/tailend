@@ -3,26 +3,85 @@ module Tailend exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
--- Numbers are running the world
-type alias Model =
-    Int
 
--- Our app does nothing but start
+-- What are we talking about ?
+
+
+type alias Model =
+    { age : Int
+    , expected : Int
+    }
+
+
+
+-- What can happen ? So far, just the start of the world.
+
+
 type Msg
     = Start
 
--- We start with a null model, and nothing to do next
+
+
+-- Let's talk about a lucky 35 yo person, who expect to live up to 90.
+
+
+initialModel : Model
+initialModel =
+    { age = 35
+    , expected = 90
+    }
+
+
 init : ( Model, Cmd Msg )
 init =
-    ( 0, Cmd.none )
+    ( initialModel
+    , Cmd.none
+    )
+
+
 
 -- We react to all messages but leaving the world intact, and doing nothing. Talk about a zen application.
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     ( model, Cmd.none )
 
--- The simplest possible polite view.
+
+
+-- We display things with simple images
+
+
 view : Model -> Html Msg
 view model =
-    div []
-        [ text "Hello world" ]
+    div [ class "page" ]
+        [ tailendView model ]
+
+
+tailendView : Model -> Html Msg
+tailendView model =
+    let
+        crossed =
+            model.age
+
+        uncrossed =
+            model.expected - model.age
+    in
+        div [ class "tailend-view" ]
+            ((List.repeat crossed crossedItem) ++ (List.repeat uncrossed uncrossedItem))
+
+
+crossedItem : Html Msg
+crossedItem =
+    div [ class "tailend-box" ]
+        [ div [ class "tailend-cross" ]
+            [ text "X" ]
+        ]
+
+
+uncrossedItem : Html Msg
+uncrossedItem =
+    div [ class "tailend-box" ]
+        [ div [ class "tailend-item" ]
+            [ text "O" ]
+        ]
