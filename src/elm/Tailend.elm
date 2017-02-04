@@ -6,15 +6,57 @@ import Html.Events exposing (..)
 import String exposing (..)
 
 
--- What are we talking about ?
--- type Error
---     = BadAge
---     | BadExpected
-
-
 type alias Model =
-    { age : Maybe Int
-    , expected : Maybe Int
+    { age : String
+    , expected : String
+    }
+
+
+type alias Period =
+    { age : Int
+    , expected : Int
+    }
+
+
+type PeriodError
+    = InvalidValues
+    | InvalidAge
+    | InvalidExpected
+    | InvalidRange
+
+
+toPeriod : Model -> Result PeriodError Period
+toPeriod model =
+    let
+        age =
+            model.age
+                |> String.toInt
+
+        expected =
+            model.expected
+                |> String.toInt
+    in
+        case ( age, expected ) of
+            ( Err _, Err _ ) ->
+                Err InvalidValues
+
+            ( Err _, _ ) ->
+                Err InvalidAge
+
+            ( _, Err _ ) ->
+                Err InvalidExpected
+
+            ( Ok age, Ok expected ) ->
+                if age <= expected then
+                    Ok { age = age, expected = expected }
+                else
+                    Err InvalidRange
+
+
+initialModel : Model
+initialModel =
+    { age = "35"
+    , expected = "90"
     }
 
 
@@ -22,13 +64,6 @@ type Msg
     = Start
     | ChangeAge String
     | ChangeExpected String
-
-
-initialModel : Model
-initialModel =
-    { age = Just 35
-    , expected = Just 90
-    }
 
 
 init : ( Model, Cmd Msg )
@@ -44,34 +79,11 @@ update action model =
         Start ->
             ( model, Cmd.none )
 
-        ChangeAge age ->
-            ( updateAge model age
-            , Cmd.none
-            )
+        ChangeAge a ->
+            ( { model | age = a }, Cmd.none )
 
-        ChangeExpected expected ->
-            ( updateExpected model expected, Cmd.none )
-
-
-updateAge : Model -> String -> Model
-updateAge model str =
-    let
-        age =
-            str
-                |> String.toInt
-                |> Result.toMaybe
-    in
-        { model | age = age }
-
-
-updateExpected : Model -> String -> Model
-updateExpected model expected =
-    case String.toInt expected of
-        Ok expected ->
-            { model | expected = Just expected }
-
-        Err _ ->
-            { model | expected = Nothing }
+        ChangeExpected e ->
+            ( { model | expected = e }, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -87,50 +99,64 @@ inputs model =
     div []
         [ input
             [ placeholder "Age"
-            , value (maybeToString model.age)
+            , value model.age
             , onInput ChangeAge
             ]
             []
         , input
             [ placeholder "Expected"
-            , value (maybeToString model.expected)
+            , value model.expected
             , onInput ChangeExpected
             ]
             []
         ]
 
 
-maybeToString : Maybe Int -> String
-maybeToString x =
-    x
-        |> Maybe.map toString
-        |> Maybe.withDefault ""
-
-
-handleAgeInput : String -> Msg
-handleAgeInput =
-    ChangeAge
-
-
 tailendView : Model -> Html Msg
 tailendView model =
-    case ( model.age, model.expected ) of
-        ( Nothing, _ ) ->
-            div [] [ text "You should type an age" ]
+    let
+        period =
+            toPeriod model
+    in
+        case period of
+            Err e ->
+                periodError e
 
-        ( _, Nothing ) ->
-            div [] [ text "You should type an expected age" ]
+            Ok p ->
+                periodView p
 
-        ( Just age, Just expected ) ->
-            let
-                crossed =
-                    age
 
-                uncrossed =
-                    expected - age
-            in
-                div [ class "tailend-view" ]
-                    ((List.repeat crossed crossedItem) ++ (List.repeat uncrossed uncrossedItem))
+periodView : Period -> Html Msg
+periodView p =
+    let
+        crossed =
+            p.age
+
+        uncrossed =
+            p.expected - p.age
+    in
+        div [ class "tailend-view" ]
+            ((List.repeat crossed crossedItem) ++ (List.repeat uncrossed uncrossedItem))
+
+
+periodError : PeriodError -> Html Msg
+periodError error =
+    let
+        message =
+            case error of
+                InvalidValues ->
+                    "Please type an age and expected age"
+
+                InvalidAge ->
+                    "Please type an age"
+
+                InvalidExpected ->
+                    "Please type an expected age"
+
+                InvalidRange ->
+                    "Your expected age should be bigger than your age"
+    in
+        div [] [ text message ]
 
 
 crossedItem : Html Msg
