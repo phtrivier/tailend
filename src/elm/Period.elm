@@ -1,4 +1,4 @@
-module Period exposing (State, Period, PeriodError(..), toPeriod, view)
+module Period exposing (State, initState, stateToPeriod, Period, PeriodError(..), view)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -6,10 +6,20 @@ import Html.Events exposing (..)
 import String exposing (..)
 
 
-type alias State =
-    { age : String
-    , expected : String
-    }
+-- I leave the state 'opaque' by using a single constructor
+-- enum type.
+
+
+type State
+    = State
+        { age : String
+        , expected : String
+        }
+
+
+initState : String -> String -> State
+initState age expected =
+    State { age = age, expected = expected }
 
 
 type alias Period =
@@ -25,16 +35,16 @@ type PeriodError
     | InvalidRange
 
 
-toPeriod : State -> Result PeriodError Period
-toPeriod state =
+stateToPeriod : State -> Result PeriodError Period
+stateToPeriod (State { age, expected }) =
     let
-        age =
-            String.toInt state.age
+        age_ =
+            String.toInt age
 
-        expected =
-            String.toInt state.expected
+        expected_ =
+            String.toInt expected
     in
-        case ( age, expected ) of
+        case ( age_, expected_ ) of
             ( Err _, Err _ ) ->
                 Err InvalidValues
 
@@ -44,43 +54,43 @@ toPeriod state =
             ( _, Err _ ) ->
                 Err InvalidExpected
 
-            ( Ok age, Ok expected ) ->
-                if age <= expected then
-                    Ok { age = age, expected = expected }
+            ( Ok age_, Ok expected_ ) ->
+                if age_ <= expected_ then
+                    Ok { age = age_, expected = expected_ }
                 else
                     Err InvalidRange
 
 
 changeAge : (State -> msg) -> State -> String -> msg
-changeAge toMsg state str =
+changeAge toMsg (State { age, expected }) str =
     let
         state =
-            { state | age = str }
+            State { age = str, expected = expected }
     in
         toMsg state
 
 
 changeExp : (State -> msg) -> State -> String -> msg
-changeExp toMsg state str =
+changeExp toMsg (State { age, expected }) str =
     let
         state =
-            { state | expected = str }
+            State { age = age, expected = str }
     in
         toMsg state
 
 
 view : (State -> msg) -> State -> Html msg
-view onChange state =
+view onChange ((State { age, expected }) as state) =
     div []
         [ input
             [ placeholder "Age"
-            , value state.age
+            , value age
             , onInput (changeAge onChange state)
             ]
             []
         , input
             [ placeholder "Expected"
-            , value state.expected
+            , value expected
             , onInput (changeExp onChange state)
             ]
             []

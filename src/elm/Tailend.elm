@@ -2,25 +2,16 @@ module Tailend exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-
-
--- import Html.Events exposing (..)
--- import String exposing (..)
-
 import Period exposing (..)
 
 
 type alias Model =
-    { periodState : Period.State
-    }
+    { periodState : Period.State }
 
 
 initialModel : Model
 initialModel =
-    { periodState =
-        { age = "35"
-        , expected = "90"
-        }
+    { periodState = Period.initState "35" "90"
     }
 
 
@@ -49,13 +40,12 @@ update action model =
 view : Model -> Html Msg
 view model =
     let
-        onStateChange =
+        onPeriodStateChange =
             SetPeriodState
     in
         div [ class "page" ]
-            [ Period.view onStateChange model.periodState
+            [ Period.view onPeriodStateChange model.periodState
             , tailendView model
-            , div [] [ text model.periodState.age ]
             ]
 
 
@@ -63,7 +53,7 @@ tailendView : Model -> Html Msg
 tailendView model =
     let
         period =
-            toPeriod model.periodState
+            Period.stateToPeriod model.periodState
     in
         case period of
             Err e ->
