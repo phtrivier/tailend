@@ -2,33 +2,32 @@ module Tailend exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import String exposing (..)
 
 
 -- What are we talking about ?
+-- type Error
+--     = BadAge
+--     | BadExpected
 
 
 type alias Model =
-    { age : Int
-    , expected : Int
+    { age : Maybe Int
+    , expected : Maybe Int
     }
-
-
-
--- What can happen ? So far, just the start of the world.
 
 
 type Msg
     = Start
-
-
-
--- Let's talk about a lucky 35 yo person, who expect to live up to 90.
+    | ChangeAge String
+    | ChangeExpected String
 
 
 initialModel : Model
 initialModel =
-    { age = 35
-    , expected = 90
+    { age = Just 35
+    , expected = Just 90
     }
 
 
@@ -39,36 +38,99 @@ init =
     )
 
 
-
--- We react to all messages but leaving the world intact, and doing nothing. Talk about a zen application.
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
-    ( model, Cmd.none )
+    case action of
+        Start ->
+            ( model, Cmd.none )
+
+        ChangeAge age ->
+            ( updateAge model age
+            , Cmd.none
+            )
+
+        ChangeExpected expected ->
+            ( updateExpected model expected, Cmd.none )
 
 
+updateAge : Model -> String -> Model
+updateAge model str =
+    let
+        age =
+            str
+                |> String.toInt
+                |> Result.toMaybe
+    in
+        { model | age = age }
 
--- We display things with simple images
+
+updateExpected : Model -> String -> Model
+updateExpected model expected =
+    case String.toInt expected of
+        Ok expected ->
+            { model | expected = Just expected }
+
+        Err _ ->
+            { model | expected = Nothing }
 
 
 view : Model -> Html Msg
 view model =
     div [ class "page" ]
-        [ tailendView model ]
+        [ inputs model
+        , tailendView model
+        ]
+
+
+inputs : Model -> Html Msg
+inputs model =
+    div []
+        [ input
+            [ placeholder "Age"
+            , value (maybeToString model.age)
+            , onInput ChangeAge
+            ]
+            []
+        , input
+            [ placeholder "Expected"
+            , value (maybeToString model.expected)
+            , onInput ChangeExpected
+            ]
+            []
+        ]
+
+
+maybeToString : Maybe Int -> String
+maybeToString x =
+    x
+        |> Maybe.map toString
+        |> Maybe.withDefault ""
+
+
+handleAgeInput : String -> Msg
+handleAgeInput =
+    ChangeAge
 
 
 tailendView : Model -> Html Msg
 tailendView model =
-    let
-        crossed =
-            model.age
+    case ( model.age, model.expected ) of
+        ( Nothing, _ ) ->
+            div [] [ text "You should type an age" ]
 
-        uncrossed =
-            model.expected - model.age
-    in
-        div [ class "tailend-view" ]
-            ((List.repeat crossed crossedItem) ++ (List.repeat uncrossed uncrossedItem))
+        ( _, Nothing ) ->
+            div [] [ text "You should type an expected age" ]
+
+        ( Just age, Just expected ) ->
+            let
+                crossed =
+                    age
+
+                uncrossed =
+                    expected - age
+            in
+                div [ class "tailend-view" ]
+                    ((List.repeat crossed crossedItem) ++ (List.repeat uncrossed uncrossedItem))
 
 
 crossedItem : Html Msg
